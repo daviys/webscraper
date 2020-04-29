@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using WebScraper.DTO;
 using WebScraper.Hubs;
 using WebScraper.Models;
 
@@ -23,6 +24,9 @@ namespace WebScraper.Controllers
         private readonly IHubContext<ScraperHub> _hubContext;
         private readonly ILogger<HomeController> _logger;
 
+        public string lastLink = "";
+        
+        public int level = 0; // уровни вложенности, прохода
         public int productCountSuccess = 0;
         public int productCountError = 0;
 
@@ -64,83 +68,50 @@ namespace WebScraper.Controllers
 
         #region Methods
 
-        public async Task StartParcing(string homeUrl)
+        [HttpPost]
+        public async Task StartParcing(ParamsDTO dtoParams)
         {
             try
             {
                 HtmlWeb web = new HtmlWeb();
 
-                var htmlDoc = web.Load(homeUrl);
+                var htmlDoc = web.Load(dtoParams.HomeUrl);
 
-                var products = htmlDoc.DocumentNode.SelectNodes("//ul[@class='list']");
+                var products = htmlDoc.DocumentNode.SelectNodes("//*[@class='"+ dtoParams.ProductList +"']");
 
-                //ViewBag.Html = GetLinksFromPage(htmlDoc);
-                //ViewBag.Html = products.Descendants("a").Select(a => a.Attributes["href"].Value).ToList();
-
-                //string folder = _hostingEnvironment.ContentRootPath + "\\AppData\\" + DateTime.Now.ToString("dd.MM.yyyy");
-                //if (!Directory.Exists(folder))
-                //{
-                //    Directory.CreateDirectory(folder);
-                //}
-
-                //var date = DateTime.Now.ToString("dd.MM.yyyy-HH-mm");
-                //string filePath = Path.Combine(folder, "brandname-" + date + ".csv"); // brandname to variable
-                //var fileHeaders = typeof(ItemModel)
-                //                    .GetProperties()
-                //                    .Select(x => x.GetCustomAttribute<DisplayAttribute>())
-                //                    .Where(x => x != null)
-                //                    .Select(x => x.Name);
+                level++;
 
                 var links = products.Descendants("a").Select(a => a.Attributes["href"].Value).ToList();
 
-                await DisplayProducts(links, homeUrl);
+                if (level == 1)
+                    lastLink = links.Last();
 
-                //if (System.IO.File.Exists(filePath))
-                //{
-                //    System.IO.File.Delete(filePath);
-                //}
-                // BLL
-                //using (StreamWriter streamWriter = new StreamWriter(filePath, true, Encoding.GetEncoding("utf-8")))
-                //{
-                // set headers
-                //streamWriter.WriteLine($"{string.Join(";", fileHeaders)}");
-
-                //int i = 1;
-
-                // think
-                //if (links != null)
-                //{
-                //    foreach (var url in links)
-                //    {
-                //        var item = DoWork(url);
-                //        if (item != null)
-                //            streamWriter.WriteLine($"{i++};{item.Name};{item.Price};{item.Description}");
-                //    }
-                //}
-                //}
+                await DisplayProducts(links, dtoParams);
             }
             catch (Exception ex)
             {
-                // refatctor this
                 throw (ex);
             }
         }
 
-        private async Task DisplayProducts(List<string> links, string homeUrl)
+        private async Task DisplayProducts(List<string> links, ParamsDTO dtoParams)
         {
             if (links != null)
             {
                 foreach (var url in links)
                 {
-                    var item = DoWork(url, homeUrl);
+                    var item = DoWork(url, dtoParams);
                     if (item.Result != null)
                     {
-                        await _hubContext.Clients.All.SendAsync("Send", $"{++productCountSuccess} {item.Result.Name} {item.Result.Price} {item.Result.Description} {item.Result.ImgHref}");
+                        if (!item.Result.Name.StartsWith("---"))
+                            await _hubContext.Clients.All.SendAsync("Send", $"{++productCountSuccess} {item.Result.Name} {item.Result.Price} {item.Result.Description} {item.Result.ImgHref}");
+                        if (url == lastLink)
+                            await _hubContext.Clients.All.SendAsync("Send", $"Количество спарсенных {productCountSuccess}, ошибок {productCountError}");
                     }
                     else
                     {
                         await _hubContext.Clients.All.SendAsync("Send", $"Error due parsing product");
-                        productCountError++;
+                        ++productCountError;
                     }
                 }
             }
@@ -150,47 +121,42 @@ namespace WebScraper.Controllers
             }
         }
 
-        private async Task<ProductModel> DoWork(string url, string homeUrl)
+        private async Task<ProductModel> DoWork(string url, ParamsDTO dtoParams)
         {
             HtmlWeb web = new HtmlWeb();
 
-            var sitename = GetSiteHostWithProtocol(homeUrl);
+            var sitename = GetSiteHostWithProtocol(dtoParams.HomeUrl);
             var htmlDoc = web.Load(sitename + url);
 
-            var product = htmlDoc.DocumentNode.SelectSingleNode("//div[@class='parts']");
+            var product = htmlDoc.DocumentNode.SelectSingleNode("//*[@class='" + dtoParams.Description + "']");
 
             if (product != null)
             {
-                var img = htmlDoc.DocumentNode.SelectSingleNode("//div[@class='tpl-variable-part']");
+                var img = htmlDoc.DocumentNode.SelectSingleNode("//*[@class='" + dtoParams.Image + "']");
 
                 return new ProductModel()
                 {
-                    Name = htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[2]/div/div[2]/div[2]/h4") != null ? htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[2]/div/div[2]/div[2]/h4").InnerText : null,
-                    Description = htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[2]/div/div[2]/div[2]/div") != null ? Regex.Replace(htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[2]/div/div[2]/div[2]/div").InnerHtml, @"\t|\n|\r", "").Replace("  ", " ") : null,
-                    Price = htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[2]/div/div[2]/div[2]/form/p/span[1]") != null ? HttpUtility.HtmlDecode(htmlDoc.DocumentNode.SelectSingleNode("/html/body/div[2]/div/div[2]/div[2]/form/p/span[1]").InnerHtml).Replace("  ", " ") : null,
+                    Name = htmlDoc.DocumentNode.SelectSingleNode("//*[@class='" + dtoParams.Name + "']") != null ? htmlDoc.DocumentNode.SelectSingleNode("//*[@class='" + dtoParams.Name + "']").InnerText : null,
+                    Description = htmlDoc.DocumentNode.SelectSingleNode("//*[@class='" + dtoParams.Description + "']") != null ? Regex.Replace(htmlDoc.DocumentNode.SelectSingleNode("//*[@class='" + dtoParams.Description + "']").InnerHtml, @"\t|\n|\r", "").Replace("  ", " ") : null,
+                    Price = htmlDoc.DocumentNode.SelectSingleNode("//*[@class='" + dtoParams.Price + "']") != null ? HttpUtility.HtmlDecode(htmlDoc.DocumentNode.SelectSingleNode("//*[@class='" + dtoParams.Price + "']").InnerHtml).Replace("  ", " ") : null,
                     ImgHref = img != null ? sitename + string.Join("," + sitename, img.Descendants("img").Select(z => z.Attributes["src"].Value).ToList()) : string.Empty
                 };
             }
-
-            await StartParcing(homeUrl + url);
-            return null;
-        }
-
-        private List<string> GetLinksFromPage(HtmlDocument doc)
-        {
-            var res = new List<string>();
-
-            foreach (HtmlNode link in doc.DocumentNode.SelectNodes("//a[@href]"))
+            else
             {
-                HtmlAttribute att = link.Attributes["href"];
-
-                if (att.Value.Contains("a"))
+                var isProductListPage = htmlDoc.DocumentNode.SelectNodes("//*[@class='" + dtoParams.ProductList + "']");
+                // проверка если мы на странице продуктов, то снова парсим
+                if (isProductListPage != null)
                 {
-                    res.Add(att.Value);
+                    var model = dtoParams;
+                    model.HomeUrl = dtoParams.HomeUrl + url;
+                    await StartParcing(model);
+                    // возвращаем модель без данных, чтобы не возвращался null
+                    return new ProductModel() { Name = "---" };
                 }
             }
-
-            return res;
+            
+            return null;
         }
 
         // util; return https://sitename.com

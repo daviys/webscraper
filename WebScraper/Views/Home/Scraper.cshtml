@@ -3,9 +3,27 @@
 }
 <h1>@ViewData["Title"]</h1>
 
-<div>
-    Url страницы <input type="text" id="homeUrl" />
+<div class="content">
+    <label for"homeUrl">Url страницы</label>
+    <input type="text" id="homeUrl" class="form-control" />
+    <div class="params">
+        <p class="text-center">Параметры</p>
+        <label for"productList">CSS-класс списка продуктов</label>
+        <input type="text" id="productList" class="form-control" />
+        <label for"name">Наименование продукта</label>
+        <input type="text" id="name" class="form-control" />
+        <label for"name">Описание продукта (html)</label>
+        <input type="text" id="description" class="form-control" />
+        <label for"image">Изображение продукта</label>
+        <input type="text" id="image" class="form-control" />
+        <label for"price">Цена</label>
+        <input type="text" id="price" class="form-control" />
+    </div>
 </div>
+<br />
 <div id="logger">
 </div>
-<button id="startParsing">Начать парсинг</button>
+<br />
+<div class="result">
+</div>
+<button id="startParsing" class="btn btn-primary">Начать парсинг</button>

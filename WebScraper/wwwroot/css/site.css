@@ -72,9 +72,10 @@ body {
 
 #logger {
     margin: auto;
+    min-height: 30px;
     max-height: 390px;
     overflow-y: scroll;
-    border: 1px solid #111;
+    border: 1px solid #ccc;
 }
 
     #logger > .product {
@@ -82,3 +83,7 @@ body {
         border: 1px solid #1b6ec2;
         margin: 1px auto;
     }
+
+        #logger > .product.error {
+            color: red;
+        }
