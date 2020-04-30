@@ -10,7 +10,8 @@ const hubConnection = new signalR.HubConnectionBuilder()
 
 hubConnection.on("Send", function (data) {
     if (data.indexOf(connectionLastWord) > -1) {
-        $('.result').append('<p><u>' + data + '</u></p>');
+        $('.result').prepend('<p><u>' + data + '</u></p>');
+        hubConnection.stop();
         return;
     }
 
@@ -26,6 +27,13 @@ $("#startParsing").on("click", function (e) {
     hubConnection.invoke("Send", message);
 });
 
+$("#stopParsing").on("click", function (e) {
+    let successCount = $('#logger > .product').length;
+    let errorCount = $('#logger > .product.error').length;
+    $('.result').append('<p><u>Количество спарсенных ' + (successCount - errorCount) + ', ошибок ' + errorCount + '</u></p>');
+    hubConnection.stop();
+});
+
 hubConnection.start().catch(err => console.error(err.toString()));
 
 var sample = {};
@@ -35,7 +43,7 @@ sample.postData = function () {
     let name = $('#name').val();
     let description = $('#description').val();
     let image = $('#image').val();
-    let price = $('#image').val();
+    let price = $('#price').val();
 
     $.ajax({
         type: "POST",
