@@ -23,32 +23,39 @@ hubConnection.on("Send", function (data) {
 });
 
 $("#startParsing").on("click", function (e) {
-    let message = sample.postData();
+    const message = sample.postData();
     hubConnection.invoke("Send", message);
 });
 
 $("#stopParsing").on("click", function (e) {
-    let successCount = $('#logger > .product').length;
-    let errorCount = $('#logger > .product.error').length;
+    const successCount = $('#logger > .product').length;
+    const errorCount = $('#logger > .product.error').length;
     $('.result').append('<p><u>Количество спарсенных ' + (successCount - errorCount) + ', ошибок ' + errorCount + '</u></p>');
     hubConnection.stop();
 });
 
 hubConnection.start().catch(err => console.error(err.toString()));
 
-var sample = {};
+const sample = {};
 sample.postData = function () {
-    let url = $('#homeUrl').val();
-    let productList = $('#productList').val();
-    let name = $('#name').val();
-    let description = $('#description').val();
-    let image = $('#image').val();
-    let price = $('#price').val();
+    const url = $('#homeUrl').val();
+    const productList = $('#productList').val();
+    const name = $('#name').val();
+    const description = $('#description').val();
+    const image = $('#image').val();
+    const price = $('#price').val();
 
     $.ajax({
         type: "POST",
         url: "/Home/StartParcing",
-        data: { "homeUrl": url, "productList": productList, "name": name, "description": description, "image": image, "price": price },
+        data: {
+            "homeUrl": url,
+            "productList": productList,
+            "name": name,
+            "description": description,
+            "image": image,
+            "price": price
+        },
         accept: 'application/json',
         success: function (data) {  }
     });

@@ -25,7 +25,7 @@ namespace WebScraper.Controllers
         private readonly ILogger<HomeController> _logger;
 
         public string lastLink = "";
-        
+
         public int level = 0; // уровни вложенности, прохода
         public int productCountSuccess = 0;
         public int productCountError = 0;
@@ -77,7 +77,7 @@ namespace WebScraper.Controllers
 
                 var htmlDoc = web.Load(dtoParams.HomeUrl);
 
-                var products = htmlDoc.DocumentNode.SelectNodes("//*[@class='"+ dtoParams.ProductList +"']");
+                var products = htmlDoc.DocumentNode.SelectNodes(dtoParams.ProductList);
 
                 level++;
 
@@ -128,17 +128,18 @@ namespace WebScraper.Controllers
             var sitename = GetSiteHostWithProtocol(dtoParams.HomeUrl);
             var htmlDoc = web.Load(sitename + url);
 
-            var product = htmlDoc.DocumentNode.SelectSingleNode("//*[@class='" + dtoParams.Description + "']");
+            var product = htmlDoc.DocumentNode.SelectSingleNode(dtoParams.Name) != null
+                          || htmlDoc.DocumentNode.SelectSingleNode(dtoParams.Description) != null;
 
-            if (product != null)
+            if (product)
             {
-                var img = htmlDoc.DocumentNode.SelectSingleNode("//*[@class='" + dtoParams.Image + "']");
+                var img = htmlDoc.DocumentNode.SelectSingleNode(dtoParams.Image);
 
                 return new ProductModel()
                 {
-                    Name = htmlDoc.DocumentNode.SelectSingleNode("//*[@class='" + dtoParams.Name + "']") != null ? htmlDoc.DocumentNode.SelectSingleNode("//*[@class='" + dtoParams.Name + "']").InnerText : null,
-                    Description = htmlDoc.DocumentNode.SelectSingleNode("//*[@class='" + dtoParams.Description + "']") != null ? Regex.Replace(htmlDoc.DocumentNode.SelectSingleNode("//*[@class='" + dtoParams.Description + "']").InnerHtml, @"\t|\n|\r", "").Replace("  ", " ") : null,
-                    Price = htmlDoc.DocumentNode.SelectSingleNode("//*[@class='" + dtoParams.Price + "']") != null ? HttpUtility.HtmlDecode(htmlDoc.DocumentNode.SelectSingleNode("//*[@class='" + dtoParams.Price + "']").InnerHtml).Replace("  ", " ") : null,
+                    Name = htmlDoc.DocumentNode.SelectSingleNode(dtoParams.Name) != null ? htmlDoc.DocumentNode.SelectSingleNode(dtoParams.Name).InnerText : null,
+                    Description = htmlDoc.DocumentNode.SelectSingleNode(dtoParams.Description) != null ? Regex.Replace(htmlDoc.DocumentNode.SelectSingleNode(dtoParams.Description).InnerHtml, @"\t|\n|\r", "").Replace("  ", " ") : null,
+                    Price = htmlDoc.DocumentNode.SelectSingleNode(dtoParams.Price) != null ? HttpUtility.HtmlDecode(htmlDoc.DocumentNode.SelectSingleNode(dtoParams.Price).InnerHtml).Replace("  ", " ") : null,
                     ImgHref = img != null ? sitename + string.Join("," + sitename, img.Descendants("img").Select(z => z.Attributes["src"].Value).ToList()) : string.Empty
                 };
             }
