@@ -153,7 +153,7 @@ namespace WebScraper.Controllers
                     Name = htmlDoc.DocumentNode.SelectSingleNode(queryParams.Name) != null ? htmlDoc.DocumentNode.SelectSingleNode(queryParams.Name).InnerText : null,
                     Description = htmlDoc.DocumentNode.SelectSingleNode(queryParams.Description) != null ? Regex.Replace(htmlDoc.DocumentNode.SelectSingleNode(queryParams.Description).InnerHtml, @"\t|\n|\r", "").Replace("  ", " ") : null,
                     Price = htmlDoc.DocumentNode.SelectSingleNode(queryParams.Price) != null ? HttpUtility.HtmlDecode(htmlDoc.DocumentNode.SelectSingleNode(queryParams.Price).InnerHtml).Replace("  ", " ") : null,
-                    ImgHref = img != null ? sitename + string.Join(" " + sitename, img.Descendants("img").Select(z => z.Attributes["src"].Value).ToList()) : string.Empty
+                    ImgHref = img != null ? sitename + string.Join("," + sitename, img.Descendants("img").Select(z => z.Attributes["src"].Value).ToList()) : string.Empty
                 };
             }
             else
