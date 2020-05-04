@@ -13,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using WebScraper.Hubs;
+using WebScraper.Services;
 
 namespace WebScraper
 {
@@ -36,6 +37,8 @@ namespace WebScraper
             services.AddControllersWithViews();
             services.AddRazorPages();
             services.AddSignalR();
+
+            services.AddTransient<IScrapingService, ScrapingService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

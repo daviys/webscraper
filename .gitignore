@@ -338,4 +338,4 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
-/WebScraper/AppData/03.05.2020
+/WebScraper/AppData/*

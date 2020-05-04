@@ -38,16 +38,16 @@ hubConnection.start().catch(err => console.error(err.toString()));
 
 const sample = {};
 sample.postData = function () {
-    const url = $('#homeUrl').val();
-    const productList = $('#productList').val();
-    const name = $('#name').val();
-    const description = $('#description').val();
-    const image = $('#image').val();
-    const price = $('#price').val();
+    const url = $('#HomeUrl').val();
+    const productList = $('#ProductList').val();
+    const name = $('#Name').val();
+    const description = $('#Description').val();
+    const image = $('#Image').val();
+    const price = $('#Price').val();
 
     $.ajax({
         type: "POST",
-        url: "/Home/StartParcing",
+        url: "/Home/StartScraping",
         data: {
             "homeUrl": url,
             "productList": productList,

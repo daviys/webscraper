@@ -71,7 +71,7 @@ body {
 }
 
 #logger {
-    margin: auto;
+    margin: 0 auto 30px;
     min-height: 30px;
     max-height: 390px;
     overflow-y: scroll;
