@@ -25,6 +25,7 @@ namespace WebScraper.Services
         private readonly IWebHostEnvironment _hostingEnvironment;
         private readonly IHubContext<ScraperHub> _hubContext;
 
+        public string sitename = "";
         public string lastLink = "";
         public string filename = "";
 
@@ -65,10 +66,11 @@ namespace WebScraper.Services
                 if (level == 1)
                 {
                     lastLink = links.Last();
+                    sitename = UrlConverter.GetSiteHostWithProtocol(queryParams.HomeUrl);
                     SetFilename();
                 }
 
-                await DisplayProducts(links, queryParams);
+                await ScrapProducts(links, queryParams);
             }
             catch (Exception ex)
             {
@@ -77,7 +79,7 @@ namespace WebScraper.Services
             }
         }
 
-        private async Task DisplayProducts(List<string> links, ParamsDTO queryParams)
+        private async Task ScrapProducts(List<string> links, ParamsDTO queryParams)
         {
             if (links != null)
             {
@@ -91,7 +93,8 @@ namespace WebScraper.Services
                         if (url == lastLink)
                             await _hubContext.Clients.All.SendAsync("Send", $"Количество спарсенных {productCountSuccess}, ошибок {productCountError}");
 
-                        System.IO.File.AppendAllText(filename, $"{productCountSuccess};{item.Result.Name};{item.Result.Price};{item.Result.Description};{item.Result.ImgHref}" + Environment.NewLine, Encoding.GetEncoding("utf-8"));
+                        System.IO.File.AppendAllText(filename, $"{productCountSuccess};{item.Result.ItemLink};{item.Result.Name};{item.Result.Price};{item.Result.Description};{item.Result.ImgHref};" +
+                            $"{item.Result.Brand};{item.Result.Category};{item.Result.DescriptionText};{item.Result.OldPrice}" + Environment.NewLine, Encoding.GetEncoding("utf-8"));
                     }
                     else
                     {
@@ -112,7 +115,6 @@ namespace WebScraper.Services
 
             HtmlWeb web = new HtmlWeb();
 
-            var sitename = UrlConverter.GetSiteHostWithProtocol(queryParams.HomeUrl);
             var htmlDoc = web.Load(sitename + url);
 
             var product = htmlDoc.DocumentNode.SelectSingleNode(queryParams.Name) != null
@@ -120,14 +122,19 @@ namespace WebScraper.Services
 
             if (product)
             {
-                var img = htmlDoc.DocumentNode.SelectSingleNode(queryParams.Image);
+                var img = htmlDoc.DocumentNode.SelectSingleNode(queryParams.ImgHref);
 
                 return new ProductModel()
                 {
+                    ItemLink = url,
                     Name = htmlDoc.DocumentNode.SelectSingleNode(queryParams.Name) != null ? htmlDoc.DocumentNode.SelectSingleNode(queryParams.Name).InnerText : null,
                     Description = htmlDoc.DocumentNode.SelectSingleNode(queryParams.Description) != null ? Regex.Replace(htmlDoc.DocumentNode.SelectSingleNode(queryParams.Description).InnerHtml, @"\t|\n|\r", "").Replace("  ", " ") : null,
                     Price = htmlDoc.DocumentNode.SelectSingleNode(queryParams.Price) != null ? HttpUtility.HtmlDecode(htmlDoc.DocumentNode.SelectSingleNode(queryParams.Price).InnerHtml).Replace("  ", " ") : null,
-                    ImgHref = img != null ? sitename + string.Join("," + sitename, img.Descendants("img").Select(z => z.Attributes["src"].Value).ToList()) : string.Empty
+                    ImgHref = img != null ? sitename + string.Join("," + sitename, img.Descendants("img").Select(z => z.Attributes["src"].Value).ToList()) : string.Empty,
+                    Brand = (queryParams.Brand != null && htmlDoc.DocumentNode.SelectSingleNode(queryParams.Brand) != null) ? htmlDoc.DocumentNode.SelectSingleNode(queryParams.Brand).InnerText : null,
+                    Category = (queryParams.Category != null && htmlDoc.DocumentNode.SelectSingleNode(queryParams.Category) != null) ? htmlDoc.DocumentNode.SelectSingleNode(queryParams.Category).InnerText : null,
+                    DescriptionText = (queryParams.DescriptionText != null && htmlDoc.DocumentNode.SelectSingleNode(queryParams.DescriptionText) != null) ? Regex.Replace(htmlDoc.DocumentNode.SelectSingleNode(queryParams.DescriptionText).InnerText, @"\t|\n|\r", "").Replace("  ", " ") : null,
+                    OldPrice = (queryParams.OldPrice != null && htmlDoc.DocumentNode.SelectSingleNode(queryParams.OldPrice) != null) ? HttpUtility.HtmlDecode(htmlDoc.DocumentNode.SelectSingleNode(queryParams.OldPrice).InnerHtml).Replace("  ", " ") : null
                 };
             }
             else

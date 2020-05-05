@@ -16,10 +16,21 @@
         <input asp-for="Name" class="form-control" />
         <label asp-for="Description">Описание продукта (html)</label>
         <input asp-for="Description" class="form-control" />
-        <label asp-for="Image">Изображение продукта</label>
-        <input asp-for="Image" class="form-control" />
+        <label asp-for="ImgHref">Изображение продукта</label>
+        <input asp-for="ImgHref" class="form-control" />
         <label asp-for="Price">Цена</label>
-        <input asp-for="Price" class="form-control" />
+        <input asp-for="Price" class="form-control" /><br />
+        <div class="spoiler-head btn btn-dark btn-block" data-toggle="collapse" data-target="#additional">Дополнительные параметры</div>
+        <div class="spoiler-body collapse" id="additional">
+            <label asp-for="Brand">Бренд</label>
+            <input asp-for="Brand" class="form-control" />
+            <label asp-for="Category">Категория</label>
+            <input asp-for="Category" class="form-control" />
+            <label asp-for="DescriptionText">Описание продукта (текст)</label>
+            <input asp-for="DescriptionText" class="form-control" />
+            <label asp-for="OldPrice">Старая цена</label>
+            <input asp-for="OldPrice" class="form-control" />
+        </div>
     </form>
 </div>
 

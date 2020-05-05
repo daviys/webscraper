@@ -38,25 +38,21 @@ hubConnection.start().catch(err => console.error(err.toString()));
 
 const sample = {};
 sample.postData = function () {
-    const url = $('#HomeUrl').val();
-    const productList = $('#ProductList').val();
-    const name = $('#Name').val();
-    const description = $('#Description').val();
-    const image = $('#Image').val();
-    const price = $('#Price').val();
-
     $.ajax({
         type: "POST",
         url: "/Home/StartScraping",
         data: {
-            "homeUrl": url,
-            "productList": productList,
-            "name": name,
-            "description": description,
-            "image": image,
-            "price": price
+            "homeUrl": $('#HomeUrl').val(),
+            "productList": $('#ProductList').val(),
+            "name": $('#Name').val(),
+            "description": $('#Description').val(),
+            "imgHref": $('#ImgHref').val(),
+            "price": $('#Price').val(),
+            "brand": $('#Brand').val(),
+            "category": $('#Category').val(),
+            "descriptionText": $('#DescriptionText').val(),
+            "oldPrice": $('#OldPrice').val()
         },
-        accept: 'application/json',
-        success: function (data) {  }
+        accept: 'application/json'
     });
 };

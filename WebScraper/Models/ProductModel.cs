@@ -12,11 +12,13 @@ namespace WebScraper.Models
 
         [Display(Name = "ID")]
         public int Id { get; set; }
+        [Display(Name = "Ссылка на товар")]
+        public string ItemLink { get; set; }
         [Display(Name = "Наименование")]
         public string Name { get; set; }
         [Display(Name = "Цена")]
         public string Price { get; set; }
-        [Display(Name = "Описание товара")]
+        [Display(Name = "Описание товара (html)")]
         public string Description { get; set; }
         [Display(Name = "Ссылка на изображение")]
         public string ImgHref { get; set; }
@@ -27,14 +29,10 @@ namespace WebScraper.Models
         public string Brand { get; set; }
         [Display(Name = "Категория")]
         public string Category { get; set; }
-        [Display(Name = "Описание товара с HTML")]
-        public string DescriptionHtml { get; set; }
+        [Display(Name = "Описание товара текстом")]
+        public string DescriptionText { get; set; }
         [Display(Name = "Старая цена")]
-        public int OldPrice { get; set; }
-        [Display(Name = "Ссылка на товар")]
-        public string ItemLink { get; set; }
-        [Display(Name = "Имя изображения")]
-        public string ImgName { get; set; }
+        public string OldPrice { get; set; }
         //public enum Level { get; set; }
     }
 }
